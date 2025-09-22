@@ -1,8 +1,7 @@
-import fetch from "node-fetch";
+// api/quiz.js
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz".split("");
 
-// ▶ 카테고리별 단어 풀(예시) — 많을수록 더 다양해집니다.
 const WORDS = {
   fruits: ["apple","banana","grape","orange","mango","peach","pear","kiwi","lemon","lime","papaya","plum","apricot","cherry","melon","coconut","fig","guava","blueberry","raspberry","strawberry","pineapple","pomegranate"],
   sports: ["soccer","baseball","basketball","tennis","golf","boxing","running","skiing","swimming","volleyball","rugby","badminton","cricket","hockey","cycling","fencing","surfing","archery","wrestling","skating"],
@@ -20,41 +19,11 @@ function genChoices(word){
   return shuffle([correct, ...wrongs]);
 }
 
-// ▶ 간단 메모리 캐시(서버리스에서도 짧게 유지됨)
-const cache = new Map(); // key: `${category}:${word}`, val: { url, until }
-const TTL = 1000 * 60 * 60 * 12; // 12시간
-
 function catHint(category){
   return category === "animals" ? "animal"
        : category === "sports"  ? "sport"
        : category === "objects" ? "object item"
        : "fruit";
-}
-
-// ▶ Unsplash에서 단어에 맞는 이미지를 '랜덤 페이지 + 랜덤 인덱스'로 가져오기
-async function fetchImageForWord(word, category){
-  const key = `${category}:${word}`;
-  const hit = cache.get(key);
-  if (hit && hit.until > Date.now()) return hit.url;
-
-  const hint = catHint(category);
-  const page = Math.floor(Math.random() * 5) + 1; // 1~5페이지 중 랜덤
-  const perPage = 10; // 상위 10개 받아서 그중 하나 랜덤 선택
-  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(`${word} ${hint}`)}&per_page=${perPage}&page=${page}&content_filter=high`;
-
-  const res = await fetch(url, { headers: { Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` }});
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  const results = data?.results || [];
-  if (results.length === 0) return null;
-
-  const idx = Math.floor(Math.random() * results.length); // 결과 중 랜덤
-  const chosen = results[idx];
-  const img = chosen?.urls?.small || chosen?.urls?.regular || null;
-
-  if (img) cache.set(key, { url: img, until: Date.now() + TTL });
-  return img;
 }
 
 const FALLBACK = {
@@ -63,6 +32,42 @@ const FALLBACK = {
   objects: "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&w=800&q=80",
   animals: "https://images.unsplash.com/photo-1511203466129-824e631920d4?auto=format&w=800&q=80"
 };
+
+// 간단 캐시(서버리스에서도 짧게 유지)
+const cache = new Map();
+const TTL = 1000 * 60 * 60 * 12;
+
+async function fetchImageForWord(word, category){
+  const key = `${category}:${word}`;
+  const hit = cache.get(key);
+  if (hit && hit.until > Date.now()) return hit.url;
+
+  const hint = catHint(category);
+  const page = Math.floor(Math.random() * 5) + 1;
+  const perPage = 10;
+  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(`${word} ${hint}`)}&per_page=${perPage}&page=${page}&content_filter=high`;
+
+  const accessKey = process.env.UNSPLASH_ACCESS_KEY;
+  if (!accessKey) throw new Error("UNSPLASH_ACCESS_KEY missing");
+
+  const res = await fetch(url, { headers: { Authorization: `Client-ID ${accessKey}` }});
+  if (!res.ok) {
+    // 로그로 남겨 원인 파악
+    console.error("Unsplash error:", res.status, await res.text());
+    return null;
+  }
+
+  const data = await res.json();
+  const results = data?.results || [];
+  if (results.length === 0) return null;
+
+  const idx = Math.floor(Math.random() * results.length);
+  const chosen = results[idx];
+  const img = chosen?.urls?.small || chosen?.urls?.regular || null;
+
+  if (img) cache.set(key, { url: img, until: Date.now() + TTL });
+  return img;
+}
 
 export default async function handler(req, res) {
   try {
@@ -74,7 +79,7 @@ export default async function handler(req, res) {
 
     const items = await Promise.all(words.map(async (word) => {
       let img = null;
-      try { img = await fetchImageForWord(word, category); } catch {}
+      try { img = await fetchImageForWord(word, category); } catch (e) { console.error(e); }
       return {
         word,
         shown: "_" + word.slice(1),
@@ -83,12 +88,10 @@ export default async function handler(req, res) {
       };
     }));
 
-    // ▶ 캐시 방지 헤더(선택): 클라/프록시가 응답을 오래 캐싱하지 않도록
     res.setHeader('Cache-Control', 'no-store');
-
     res.status(200).json({ ok:true, category, count: items.length, items });
   } catch (e) {
-    console.error(e);
+    console.error("quiz handler error:", e);
     res.status(500).json({ ok:false, error:String(e) });
   }
 }
