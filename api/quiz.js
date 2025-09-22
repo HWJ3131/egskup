@@ -6,7 +6,11 @@ const WORDS = {
   fruits: ["apple","banana","grape","orange","mango","peach","pear","kiwi","lemon","lime","papaya","plum","apricot","cherry","melon","coconut","fig","guava","blueberry","raspberry","strawberry","pineapple","pomegranate"],
   sports: ["soccer","baseball","basketball","tennis","golf","boxing","running","skiing","swimming","volleyball","rugby","badminton","cricket","hockey","cycling","fencing","surfing","archery","wrestling","skating"],
   objects:["table","chair","computer","pencil","bottle","phone","clock","book","camera","scissors","keyboard","monitor","backpack","umbrella","wallet","glasses","laptop","toothbrush","microwave","refrigerator"],
-  animals:["tiger","elephant","monkey","rabbit","zebra","giraffe","panda","fox","bear","lion","dog","cat","horse","dolphin","whale","eagle","shark","kangaroo","penguin","owl"]
+  animals:["tiger","elephant","monkey","rabbit","zebra","giraffe","panda","fox","bear","lion","dog","cat","horse","dolphin","whale","eagle","shark","kangaroo","penguin","owl"],
+  foods: ["pizza","bread","rice","noodles","soup","salad","cheese","yogurt","chocolate","cookie","cake","sandwich","hamburger","hotdog","pasta","sushi","dumpling","sausage","steak","omelet"],
+  tools: ["hammer","screwdriver","wrench","pliers","saw","drill","tape","ruler","scissors","flashlight","ladder","shovel","axe","brush","bucket","needle","knife","whistle","tongs","spanner"],
+  plants: ["tree","flower","grass","leaf","rose","tulip","sunflower","cactus","bamboo","moss","fern","vine","daisy","lily","oak","pine","maple","lotus","orchid","mint"],
+  jobs: ["doctor","nurse","teacher","police","firefighter","chef","farmer","singer","dancer","pilot","driver","artist","actor","writer","baker","builder","soldier","scientist","engineer","student"]
 };
 
 const shuffle = (arr)=> arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
@@ -95,3 +99,4 @@ export default async function handler(req, res) {
     res.status(500).json({ ok:false, error:String(e) });
   }
 }
+
