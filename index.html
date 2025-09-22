@@ -294,7 +294,12 @@ function finishQuiz(){
   `;
 
   // 저장 로직은 그대로
-  const payload={ ... };
+  const payload={ 
+    playerName:state.playerName, category:state.category, totalTimeMs:totalMs,
+    perQuestionTimes:state.perQuestionTimes, perQuestionCorrect:state.perQuestionCorrect,
+    questionWords:state.questionWords, questionShown:state.questionShown,
+    correctCount, wrongCount, accuracy
+  };
   fetch(`${API_BASE}/api/save`, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload)
@@ -351,4 +356,5 @@ document.getElementById('skipBtn').addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
 
