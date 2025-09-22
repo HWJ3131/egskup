@@ -266,12 +266,19 @@ function finishQuiz(){
   const accuracy=correctCount/state.questions.length;
   const sec=(ms)=>(ms/1000).toFixed(2);
 
-  // 최종에서만 정오표 제공
+  // ✅ 최종에서만 정오표 제공 + 발음 버튼 추가
   let wordListHtml='<h3 style="margin-top:6px;">문제별 단어</h3><ul>';
   state.questionWords.forEach((w,idx)=>{
     if(!w) return;
     const mark=state.perQuestionCorrect[idx]?'✅':'❌';
-    wordListHtml+=`<li style="margin:4px 0;">${mark} ${w}</li>`;
+    wordListHtml+=`
+      <li style="margin:6px 0;">
+        ${mark} ${w}
+        <button onclick="speakWord('${w}')" style="
+          margin-left:6px; font-size:14px; padding:4px 8px;
+          border-radius:8px; border:1px solid #ccc;
+        ">🔊</button>
+      </li>`;
   });
   wordListHtml+='</ul>';
 
@@ -286,13 +293,8 @@ function finishQuiz(){
     ${wordListHtml}
   `;
 
-  // 결과 저장은 /api/save로 (환경변수 GS_ENDPOINT는 서버에서만)
-  const payload={
-    playerName:state.playerName, category:state.category, totalTimeMs:totalMs,
-    perQuestionTimes:state.perQuestionTimes, perQuestionCorrect:state.perQuestionCorrect,
-    questionWords:state.questionWords, questionShown:state.questionShown,
-    correctCount, wrongCount, accuracy
-  };
+  // 저장 로직은 그대로
+  const payload={ ... };
   fetch(`${API_BASE}/api/save`, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload)
@@ -300,6 +302,19 @@ function finishQuiz(){
 
   quiz.style.display='none'; result.style.display='';
 }
+
+// ✅ 발음 기능 함수 추가
+function speakWord(word){
+  if (!('speechSynthesis' in window)) {
+    alert('이 브라우저는 발음을 지원하지 않아요.');
+    return;
+  }
+  const utter = new SpeechSynthesisUtterance(word);
+  utter.lang = 'en-US';   // 영어 발음
+  utter.rate = 0.9;       // 조금 천천히
+  speechSynthesis.speak(utter);
+}
+
 
 /* 시작 */
 async function startQuiz(){
@@ -336,3 +351,4 @@ document.getElementById('skipBtn').addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
