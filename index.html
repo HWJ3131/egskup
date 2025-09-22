@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>첫 글자 맞히기 영어 퀴즈</title>
+<style>
+  :root { --bg:#0f1222; --card:#171b34; --text:#eef3ff; --muted:#a6b3ff; --accent:#7aa2ff; --ok:#35d49a; --bad:#ff6b6b; --radius:16px; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, "맑은 고딕", sans-serif;
+         background: radial-gradient(1200px 600px at 10% 0%, #1c2350, #0f1222); color: var(--text); padding: 24px; }
+  .app { max-width: 840px; margin: 0 auto; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+  h1 { margin: 8px 0 16px; font-weight: 800; }
+  .row { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 720px){ .row.two { grid-template-columns: 1fr 1fr; } }
+  label { font-size: 14px; color: var(--muted); }
+  input[type="text"], select { width: 100%; padding: 12px 14px; border-radius: 12px; border:1px solid #2a3060; background:#121633; color:var(--text); }
+  button { appearance: none; border:0; background: var(--accent); color:#0a0d1f; font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+  button.secondary { background: #2a3060; color: var(--text); }
+  .quiz-img { width: 260px; height: 260px; object-fit: cover; border-radius: 16px; border:1px solid #2a3060; background:#0b0e25; display:block; margin: 6px auto 10px; }
+  .word { font-size: 28px; letter-spacing: 2px; text-align: center; margin: 6px 0 14px; }
+  .status { display:flex; gap:10px; flex-wrap: wrap; justify-content: center; font-size: 14px; color: var(--muted); }
+  .pill { border:1px solid #2a3060; background:#101435; padding:6px 10px; border-radius: 999px; }
+  .choices { display:grid; gap:10px; grid-template-columns: repeat(2, 1fr); margin: 10px 0 4px; }
+  .choice { background:#232a61; color:#fff; border:1px solid #2a3060; }
+  .choice.correct { background: #143c2d; border-color:#1b6c52; }
+  .choice.wrong { background: #4a1f2a; border-color:#8a2c3c; }
+  .result { font-size: 18px; line-height: 1.6; }
+  .ok { color: var(--ok); }
+  .bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <h1>첫 글자 맞히기 영어 퀴즈</h1>
+
+    <!-- 설정 -->
+    <div id="setup">
+      <div class="row two">
+        <div>
+          <label>플레이어 이름</label>
+          <input id="playerName" type="text" placeholder="이름을 입력하세요" />
+        </div>
+        <div>
+          <label>카테고리</label>
+          <select id="category">
+            <option value="fruits">과일</option>
+            <option value="sports">운동</option>
+            <option value="objects">물건</option>
+            <option value="animals">동물</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <button id="startBtn">퀴즈 시작</button>
+        <button class="secondary" id="resetBtn">초기화</button>
+      </div>
+      <div id="setupError" style="display:none; color:#fff; background:#4a1f2a; border:1px solid #8a2c3c; padding:10px; border-radius:8px; margin-top:8px;"></div>
+    </div>
+
+    <!-- 퀴즈 -->
+    <div id="quiz" style="display:none; margin-top:16px;">
+      <div class="status" style="margin-bottom:8px;">
+        <span class="pill">문제 <span id="qIndex">1</span> / 10</span>
+        <span class="pill">이번 문제 시간: <span id="qTime">0.00</span>s</span>
+        <span class="pill">총 시간: <span id="totalTime">0.00</span>s</span>
+      </div>
+      <img id="qImage" class="quiz-img" alt="quiz image" src="">
+      <div class="word"><span id="qShown">_pple</span></div>
+      <div class="choices">
+        <button class="choice" id="ch0"></button>
+        <button class="choice" id="ch1"></button>
+        <button class="choice" id="ch2"></button>
+        <button class="choice" id="ch3"></button>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:center; margin-top:6px;">
+        <button class="secondary" id="skipBtn">모르겠어요</button>
+        <button id="nextBtn" style="display:none;">다음 문제</button>
+      </div>
+    </div>
+
+    <!-- 결과 -->
+    <div id="result" style="display:none; margin-top:16px;">
+      <h2>결과</h2>
+      <div class="result" id="resultText"></div>
+      <div style="margin-top:12px;">
+        <button id="retryBtn">다시 풀기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/** ▼ 연결 설정 ▼
+ *  - 같은 Vercel 프로젝트에서 정적 페이지도 서빙한다면: const API_BASE = '';
+ *  - GitHub Pages 등 다른 곳에서 호스팅하면: const API_BASE = 'https://<your>.vercel.app';
+ */
+const API_BASE = '';  // 권장: 같은 도메인에서 /api 사용
+const TOTAL_QUESTIONS = 10;
+
+const $ = (id)=>document.getElementById(id);
+const qImage=$('qImage'),qShown=$('qShown'),qIndex=$('qIndex'),qTime=$('qTime'),totalTime=$('totalTime');
+const choiceBtns=[$('ch0'),$('ch1'),$('ch2'),$('ch3')],nextBtn=$('nextBtn'),skipBtn=$('skipBtn');
+let state={playerName:'',category:'fruits',questions:[],idx:0,startAt:0,qStartAt:0,ticker:0,
+  perQuestionTimes:[],perQuestionCorrect:[],questionWords:[],questionShown:[],currentChoices:[],currentCorrectLetter:''};
+
+function startTimer(){const tick=()=>{const now=performance.now();
+  qTime.textContent=((now-state.qStartAt)/1000).toFixed(2);
+  totalTime.textContent=((now-state.startAt)/1000).toFixed(2);
+  state.ticker=requestAnimationFrame(tick)};state.ticker=requestAnimationFrame(tick);}
+function stopTimer(){if(state.ticker)cancelAnimationFrame(state.ticker);}
+function resetAll(){stopTimer();state={playerName:'',category:'fruits',questions:[],idx:0,startAt:0,qStartAt:0,ticker:0,
+  perQuestionTimes:[],perQuestionCorrect:[],questionWords:[],questionShown:[],currentChoices:[],currentCorrectLetter:''};
+  $('playerName').value='';$('category').value='fruits';
+  setup.style.display='';quiz.style.display='none';result.style.display='none';
+}
+
+async function loadQuizSet(category,n=TOTAL_QUESTIONS){
+  const url=`${API_BASE}/api/quiz?category=${encodeURIComponent(category)}&n=${n}`;
+  const r=await fetch(url);
+  if(!r.ok){throw new Error('API_ERROR:'+r.status);}
+  const d=await r.json();
+  if(!d.ok||!d.items){throw new Error(d.error||'API_DATA_ERROR');}
+  return d.items;
+}
+
+function showQuestion(){const q=state.questions[state.idx];
+  qImage.src=q.img;qImage.alt=q.word;qShown.textContent=q.shown;qIndex.textContent=(state.idx+1);
+  state.questionWords[state.idx]=q.word;state.questionShown[state.idx]=q.shown;
+  state.currentChoices=q.choices;state.currentCorrectLetter=q.word[0].toLowerCase();
+  choiceBtns.forEach((btn,i)=>{btn.textContent=q.choices[i].toUpperCase();
+    btn.classList.remove('correct','wrong');btn.disabled=false;btn.onclick=()=>submitChoice(q.choices[i]);});
+  nextBtn.style.display='none';skipBtn.disabled=false;state.qStartAt=performance.now();
+}
+
+function submitChoice(letter){state.perQuestionTimes[state.idx]=Math.round(performance.now()-state.qStartAt);
+  state.perQuestionCorrect[state.idx]=(letter===state.currentCorrectLetter);
+  choiceBtns.forEach(btn=>{btn.disabled=true;const val=btn.textContent.toLowerCase();
+    if(val===state.currentCorrectLetter)btn.classList.add('correct');
+    else if(val===letter)btn.classList.add('wrong');});
+  skipBtn.disabled=true;nextBtn.style.display='';
+}
+
+function nextQuestion(){state.idx++;if(state.idx>=state.questions.length)finishQuiz();else showQuestion();}
+
+function finishQuiz(){stopTimer();const totalMs=Math.round(performance.now()-state.startAt);
+  const correctCount=state.perQuestionCorrect.filter(Boolean).length;
+  const wrongCount=state.questions.length-correctCount;
+  const accuracy=correctCount/state.questions.length;
+  const sec=(ms)=>(ms/1000).toFixed(2);
+
+  let wordListHtml='<h3>문제별 단어</h3><ul>';
+  state.questionWords.forEach((w,idx)=>{if(!w)return;
+    const mark=state.perQuestionCorrect[idx]?'✅':'❌';
+    wordListHtml+=`<li>${mark} ${w} <button onclick="speakWord('${w}')">🔊</button></li>`;});
+  wordListHtml+='</ul>';
+
+  $('resultText').innerHTML=`
+    <p><b>${state.playerName}</b>님의 결과</p>
+    <ul>
+      <li>카테고리: <b>${state.category}</b></li>
+      <li>총 소요시간: <b>${sec(totalMs)}s</b></li>
+      <li>정답/오답: <b class="ok">${correctCount}</b> / <b class="bad">${wrongCount}</b></li>
+      <li>정답률: <b>${(accuracy*100).toFixed(1)}%</b></li>
+    </ul>
+    ${wordListHtml}
+  `;
+
+  // ★ 저장은 이제 /api/save 로! (GS_ENDPOINT를 프론트에 노출하지 않음)
+  const payload={playerName:state.playerName,category:state.category,totalTimeMs:totalMs,
+    perQuestionTimes:state.perQuestionTimes,perQuestionCorrect:state.perQuestionCorrect,
+    questionWords:state.questionWords,questionShown:state.questionShown,
+    correctCount,wrongCount,accuracy};
+
+  fetch(`${API_BASE}/api/save`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(r=>r.json()).then(j=>console.log('save:', j))
+  .catch(e=>console.error('save fail', e));
+
+  quiz.style.display='none';result.style.display='';
+}
+
+function speakWord(word){const u=new SpeechSynthesisUtterance(word);u.lang='en-US';speechSynthesis.speak(u);}
+
+async function startQuiz(){
+  const name=document.getElementById('playerName').value.trim();
+  const cat=document.getElementById('category').value;
+  if(!name){alert('이름을 입력하세요');return;}
+  try{
+    state.playerName=name;state.category=cat;
+    const items=await loadQuizSet(cat,TOTAL_QUESTIONS);
+    state.questions=items;state.idx=0;state.startAt=performance.now();
+    state.perQuestionTimes=new Array(items.length).fill(0);
+    state.perQuestionCorrect=new Array(items.length).fill(false);
+    state.questionWords=new Array(items.length).fill('');
+    state.questionShown=new Array(items.length).fill('');
+    setup.style.display='none';quiz.style.display='';result.style.display='none';
+    showQuestion();startTimer();
+  }catch(e){
+    console.error(e);
+    const el=document.getElementById('setupError');
+    el.textContent='문제 세트를 불러오지 못했습니다. API 주소/배포 상태를 확인해 주세요.';
+    el.style.display='';
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click',startQuiz);
+document.getElementById('resetBtn').addEventListener('click',resetAll);
+document.getElementById('retryBtn').addEventListener('click',resetAll);
+document.getElementById('skipBtn').addEventListener('click',()=>{state.perQuestionTimes[state.idx]=Math.round(performance.now()-state.qStartAt);
+  state.perQuestionCorrect[state.idx]=false;nextQuestion();});
+document.getElementById('nextBtn').addEventListener('click',nextQuestion);
+</script>
+</body>
+</html>
