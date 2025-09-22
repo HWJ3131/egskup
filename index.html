@@ -6,12 +6,11 @@
 <title>첫 글자 맞히기 영어 퀴즈 (키즈 모드)</title>
 <style>
   :root {
-    /* 연한 핑크 테마 */
-    --bg: #ffd9e6;            /* 전체 배경 */
+    --bg: #ffd9e6;            /* 연한 핑크 배경 */
     --card: #fff2f7;          /* 카드 배경 */
-    --text: #4a2b35;          /* 본문 텍스트(짙은 자주색) */
+    --text: #4a2b35;          /* 텍스트 */
     --muted: #7a5561;         /* 보조 텍스트 */
-    --accent: #ff92b2;        /* 포인트 버튼 */
+    --accent: #ff92b2;        /* 버튼 */
     --accent-press: #ff7aa1;  /* 버튼 눌림 */
     --ok: #1f8a70;
     --bad: #cc3344;
@@ -33,17 +32,13 @@
     padding: 20px;
     box-shadow: 0 8px 24px rgba(0,0,0,.08);
   }
-  h1 {
-    margin: 8px 0 12px; font-weight: 900; letter-spacing: -.4px;
-    font-size: clamp(22px, 5vw, 32px);
-  }
+  h1 { margin: 8px 0 12px; font-weight: 900; letter-spacing: -.4px; font-size: clamp(22px, 5vw, 32px); }
   .row { display: grid; gap: 12px; grid-template-columns: 1fr; }
   @media (min-width: 720px){ .row.two { grid-template-columns: 1fr 1fr; } }
   label { font-size: 16px; color: var(--muted); }
   input[type="text"], select {
     width: 100%; padding: 14px 16px; border-radius: 14px;
-    border: 2px solid #ffc0d1; background: #fff; color: var(--text);
-    font-size: 18px;
+    border: 2px solid #ffc0d1; background: #fff; color: var(--text); font-size: 18px;
   }
   button {
     appearance: none; border: 0; background: var(--accent); color: #4a2b35;
@@ -53,47 +48,29 @@
   button:active { background: var(--accent-press); transform: translateY(1px); }
   button.secondary { background: #ffe1ec; color: var(--text); border: 2px solid #ffc0d1; }
 
-  /* 이미지 더 큼 */
   .quiz-img {
     width: min(80vw, 360px); height: min(80vw, 360px);
     object-fit: cover; border-radius: 20px; border: 3px solid #ffc0d1;
     background: #fff; display: block; margin: 8px auto 12px;
   }
 
-  .word {
-    font-size: clamp(28px, 7vw, 40px);
-    letter-spacing: 2px; text-align: center; margin: 6px 0 14px;
-    font-weight: 900;
-  }
+  .word { font-size: clamp(28px, 7vw, 40px); letter-spacing: 2px; text-align: center; margin: 6px 0 14px; font-weight: 900; }
 
-  .status {
-    display:flex; gap:10px; flex-wrap: wrap; justify-content: center;
-    font-size: 16px; color: var(--muted);
-  }
-  .pill {
-    border: 2px solid #ffc0d1; background: #fff; padding: 8px 12px;
-    border-radius: 999px; font-weight: 700;
-  }
+  .status { display:flex; gap:10px; flex-wrap: wrap; justify-content: center; font-size: 16px; color: var(--muted); }
+  .pill { border: 2px solid #ffc0d1; background: #fff; padding: 8px 12px; border-radius: 999px; font-weight: 700; }
 
-  /* 보기 버튼: 폰트 1.5배(기존 대비), 터치패드 크게 */
-  .choices {
-    display:grid; gap: 12px; grid-template-columns: 1fr 1fr; margin: 12px 0 4px;
-  }
+  .choices { display:grid; gap: 12px; grid-template-columns: 1fr 1fr; margin: 12px 0 4px; }
   .choice {
     background:#fff; color: var(--text); border: 3px solid #ffc0d1;
-    font-size: clamp(22px, 6.5vw, 28px); /* 크게! */
-    padding: 16px 12px; border-radius: 16px;
-    min-height: 64px;
+    font-size: clamp(22px, 6.5vw, 28px); /* 1.5배 크게 */
+    padding: 16px 12px; border-radius: 16px; min-height: 64px;
   }
-  /* 즉시 정답 색상표시 제거 -> 클래스 자체 사용 안 함 */
 
   .result { font-size: 18px; line-height: 1.6; }
   .ok { color: var(--ok); font-weight: 800; }
   .bad { color: var(--bad); font-weight: 800; }
 
-  .bar {
-    height: 8px; border-radius: 999px; background: #ffd1df; overflow: hidden; margin-top: 8px;
-  }
+  .bar { height: 8px; border-radius: 999px; background: #ffd1df; overflow: hidden; margin-top: 8px; }
   .bar > span { display:block; height:100%; background: #ff92b2; width:0%; transition: width .2s; }
 </style>
 </head>
@@ -101,9 +78,7 @@
 <div class="app">
   <div class="card">
     <h1>첫 글자 맞히기 영어 퀴즈</h1>
-    <p style="color:var(--muted); margin-top:-6px">
-      사진과 단어를 보고, <b>첫 글자</b>에 해당하는 보기(4지선다)를 눌러요!
-    </p>
+    <p style="color:var(--muted); margin-top:-6px">사진과 단어를 보고, <b>첫 글자</b>에 해당하는 보기(4지선다)를 눌러요!</p>
 
     <!-- 설정 -->
     <div id="setup">
@@ -155,7 +130,6 @@
 
       <div style="display:flex; gap:8px; justify-content:center; margin-top:6px;">
         <button class="secondary" id="skipBtn">모르겠어요</button>
-        <!-- Next 버튼 제거: 자동 진행 -->
       </div>
     </div>
 
@@ -171,9 +145,9 @@
 </div>
 
 <script>
-/** ▼ 연결 설정 ▼
- *  - 같은 Vercel 프로젝트에서 정적 페이지도 서빙한다면: const API_BASE = '';
- *  - GitHub Pages 등 다른 곳에서 호스팅하면: const API_BASE = 'https://<your>.vercel.app';
+/** 연결 설정
+ * - 같은 Vercel 프로젝트에서 프론트+API 함께 호스팅: API_BASE = ''
+ * - 다른 곳에서 호스팅 시: API_BASE = 'https://<your>.vercel.app'
  */
 const API_BASE = '';
 const TOTAL_QUESTIONS = 10;
@@ -229,7 +203,6 @@ function showQuestion(){
   choiceBtns.forEach((btn,i)=>{
     btn.textContent=q.choices[i].toUpperCase();
     btn.disabled=false;
-    // 누르면 즉시 답 기록 + 다음 문제로 자동 진행 (색상표시/클래스 없음)
     btn.onclick=()=>submitChoiceAndAdvance(q.choices[i]);
   });
 
@@ -238,15 +211,13 @@ function showQuestion(){
 }
 
 function submitChoiceAndAdvance(letter){
-  // 시간/정오만 기록 (즉시 색상표시 없음, 자동 진행)
+  // 시간/정오만 기록 (중간 색상 표시 없음)
   state.perQuestionTimes[state.idx]=Math.round(performance.now()-state.qStartAt);
   state.perQuestionCorrect[state.idx]=(letter===state.currentCorrectLetter);
 
-  // 이중 탭 방지: 잠깐 비활성화 후 다음 문제
+  // 이중 탭 방지 후 다음 문제
   choiceBtns.forEach(btn=>btn.disabled=true);
   skipBtn.disabled=true;
-
-  // 아주 짧은 딜레이(아이가 눌렀다는 피드백 느낌)
   setTimeout(nextQuestion, 200);
 }
 
@@ -266,7 +237,7 @@ function finishQuiz(){
   const accuracy=correctCount/state.questions.length;
   const sec=(ms)=>(ms/1000).toFixed(2);
 
-  // ✅ 최종에서만 정오표 제공 + 발음 버튼 추가
+  // 최종 정오표 + 발음 버튼
   let wordListHtml='<h3 style="margin-top:6px;">문제별 단어</h3><ul>';
   state.questionWords.forEach((w,idx)=>{
     if(!w) return;
@@ -282,7 +253,7 @@ function finishQuiz(){
   });
   wordListHtml+='</ul>';
 
-  $('resultText').innerHTML=`
+  document.getElementById('resultText').innerHTML=`
     <p><b>${state.playerName}</b>의 결과</p>
     <ul>
       <li>카테고리: <b>${state.category}</b></li>
@@ -293,22 +264,24 @@ function finishQuiz(){
     ${wordListHtml}
   `;
 
-  // 저장 로직은 그대로
-  const payload={ 
+  // 결과 저장 (/api/save)
+  const payload={
     playerName:state.playerName, category:state.category, totalTimeMs:totalMs,
     perQuestionTimes:state.perQuestionTimes, perQuestionCorrect:state.perQuestionCorrect,
     questionWords:state.questionWords, questionShown:state.questionShown,
     correctCount, wrongCount, accuracy
   };
+
   fetch(`${API_BASE}/api/save`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload)
   }).then(r=>r.json()).then(j=>console.log('save:', j)).catch(e=>console.error('save error', e));
 
   quiz.style.display='none'; result.style.display='';
 }
 
-// ✅ 발음 기능 함수 추가
+// 발음 기능
 function speakWord(word){
   if (!('speechSynthesis' in window)) {
     alert('이 브라우저는 발음을 지원하지 않아요.');
@@ -316,10 +289,9 @@ function speakWord(word){
   }
   const utter = new SpeechSynthesisUtterance(word);
   utter.lang = 'en-US';   // 영어 발음
-  utter.rate = 0.9;       // 조금 천천히
+  utter.rate = 0.9;       // 약간 느리게
   speechSynthesis.speak(utter);
 }
-
 
 /* 시작 */
 async function startQuiz(){
@@ -339,7 +311,7 @@ async function startQuiz(){
   } catch(e){
     console.error(e);
     const el=document.getElementById('setupError');
-    el.textContent='문제를 불러오지 못했어요. 인터넷 연결/API 상태를 확인해 주세요.';
+    el.textContent='문제를 불러오지 못했어요. API 주소/배포 상태를 확인해 주세요.';
     el.style.display='';
   }
 }
@@ -348,7 +320,6 @@ document.getElementById('startBtn').addEventListener('click', startQuiz);
 document.getElementById('resetBtn').addEventListener('click', resetAll);
 document.getElementById('retryBtn').addEventListener('click', resetAll);
 document.getElementById('skipBtn').addEventListener('click', ()=>{
-  // 오답 처리 후 자동 진행
   state.perQuestionTimes[state.idx]=Math.round(performance.now()-state.qStartAt);
   state.perQuestionCorrect[state.idx]=false;
   submitChoiceAndAdvance('__SKIP__');
@@ -356,5 +327,3 @@ document.getElementById('skipBtn').addEventListener('click', ()=>{
 </script>
 </body>
 </html>
-
-
